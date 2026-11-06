@@ -1,0 +1,5 @@
+*.log
+resultado_*.csv
+results/**/*.sca
+results/**/*.vec
+results/**/*.vci

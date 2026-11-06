@@ -1,0 +1,7 @@
+config,n_reps,plr_media_pct,criterio,ic95_pp,limite_sup_95_pct,total_enviados,situacao,plrs_pct
+Comparacao_AreaAmpliada_ALOHA_60s,6,21.9995,ic_bilateral_t,0.8716,,430851,convergiu,21.5185;21.9216;21.0976;23.5265;22.1441;21.7884
+Comparacao_AreaAmpliada_ALOHA_30s,5,27.7175,ic_bilateral_t,0.9856,,709129,convergiu,27.2111;27.7239;27.0288;29.0480;27.5756
+Comparacao_AreaAmpliada_ALOHA_15s,5,37.0029,ic_bilateral_t,0.8223,,1355254,convergiu,36.5799;36.9368;36.3730;38.0862;37.0385
+Comparacao_AreaAmpliada_LMAC_60s,6,17.1999,ic_bilateral_t,0.9948,,431651,convergiu,16.2156;17.0444;16.5088;18.9087;17.0445;17.4772
+Comparacao_AreaAmpliada_LMAC_30s,3,18.6144,ic_bilateral_t,0.9754,,430751,convergiu,18.3315;19.0626;18.4490
+Comparacao_AreaAmpliada_LMAC_15s,3,23.6364,ic_bilateral_t,0.8858,,855312,convergiu,23.4224;24.0480;23.4388
