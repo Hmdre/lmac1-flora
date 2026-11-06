@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 // Modificado por André do Valle Medeiros em 2026: preâmbulo de 10 símbolos e teste de
-// sensibilidade na tentativa de recepção.
+// sensibilidade na tentativa de recepção; reconhece o Lmac1Mac na contagem de colisões.
 
 #include "LoRaReceiver.h"
 #include "LoRaReception.h"
@@ -21,6 +21,7 @@
 #include "../LoRaApp/SimpleLoRaApp.h"
 #include "LoRaPhyPreamble_m.h"
 #include "inet/physicallayer/wireless/common/contract/packetlevel/SignalTag_m.h"
+#include "LoRa/Lmac1Mac.h"
 
 namespace flora {
 
@@ -109,8 +110,16 @@ bool LoRaReceiver::computeIsReceptionAttempted(const IListening *listening, cons
             rec = loraMac->getReceiverAddress();
 
         if (iAmGateway == false) {
-            auto *macLayer = check_and_cast<LoRaMac *>(getParentModule()->getParentModule()->getSubmodule("mac"));
-            if (rec == macLayer->getAddress()) {
+            cModule *macModule = getParentModule()->getParentModule()->getSubmodule("mac");
+            MacAddress macAddress;
+            if (auto *loRaMacLayer = dynamic_cast<LoRaMac *>(macModule))
+                macAddress = loRaMacLayer->getAddress();
+            else if (auto *lmac1MacLayer = dynamic_cast<Lmac1Mac *>(macModule))
+                macAddress = lmac1MacLayer->getAddress();
+            else
+                throw cRuntimeError("LoRaReceiver: unrecognized MAC layer type in module '%s'", macModule->getFullPath().c_str());
+
+            if (rec == macAddress) {
                 const_cast<LoRaReceiver* >(this)->numCollisions++;
             }
             //EV << "Node: Extracted macFrame = " << loraMacFrame->getReceiverAddress() << ", node address = " << macLayer->getAddress() << std::endl;
