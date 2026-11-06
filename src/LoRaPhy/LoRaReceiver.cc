@@ -12,6 +12,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
+// Modificado por André do Valle Medeiros em 2026: preâmbulo de 10 símbolos e teste de
+// sensibilidade na tentativa de recepção.
 
 #include "LoRaReceiver.h"
 #include "LoRaReception.h"
@@ -89,6 +91,11 @@ bool LoRaReceiver::computeIsReceptionPossible(const IListening *listening, const
 
 bool LoRaReceiver::computeIsReceptionAttempted(const IListening *listening, const IReception *reception, IRadioSignal::SignalPart part, const IInterference *interference) const
 {
+    // Sinais abaixo da sensibilidade não são tentados, como no INET; sem isso o rádio
+    // ficaria em recepção e o CAD do Lmac1Mac veria o canal ocupado.
+    if (!computeIsReceptionPossible(listening, reception, part))
+        return false;
+
     if(isPacketCollided(reception, part, interference))
     {
         auto packet = reception->getTransmission()->getPacket();
@@ -177,7 +184,7 @@ bool LoRaReceiver::isPacketCollided(const IReception *reception, IRadioSignal::S
             EV << "[MSDEBUG] Packet is not discarded" << endl;
 
         /* If last 6 symbols of preamble are received, no collision*/
-        double nPreamble = 8; //from the paper "Do Lora networks..."
+        double nPreamble = 10; // mesmo preâmbulo do transmissor
         simtime_t Tsym = (pow(2, loRaReception->getLoRaSF()))/(loRaReception->getLoRaBW().get()/1000)/1000;
         simtime_t csBegin = loRaReception->getPreambleStartTime() + Tsym * (nPreamble - 6);
         if(csBegin < loRaInterference->getEndTime())

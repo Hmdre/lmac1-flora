@@ -12,6 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
+// Modificado por André do Valle Medeiros em 2026: preâmbulo de 10 símbolos e carga útil fixa de 16 bytes.
 
 #include "LoRaTransmitter.h"
 #include "inet/physicallayer/wireless/common/analogmodel/packetlevel/ScalarTransmission.h"
@@ -63,14 +64,12 @@ const ITransmission *LoRaTransmitter::createTransmission(const IRadio *transmitt
     EV << macFrame->getDetailStringRepresentation(evFlags) << endl;
     const auto &frame = macFrame->peekAtFront<LoRaPhyPreamble>();
 
-    int nPreamble = 8;
+    int nPreamble = 10;
     simtime_t Tsym = (pow(2, frame->getSpreadFactor()))/(frame->getBandwidth().get()/1000);
     simtime_t Tpreamble = (nPreamble + 4.25) * Tsym / 1000;
 
     //preambleDuration = Tpreamble;
-    int payloadBytes = 0;
-    if(iAmGateway) payloadBytes = 15;
-    else payloadBytes = 20;
+    int payloadBytes = 16; // carga útil fixa, não acompanha o parâmetro dataSize
     int payloadSymbNb = 8;
     payloadSymbNb += std::ceil((8*payloadBytes - 4*frame->getSpreadFactor() + 28 + 16 - 20*0)/(4*(frame->getSpreadFactor()-2*0)))*(frame->getCodeRendundance() + 4);
     if(payloadSymbNb < 8) payloadSymbNb = 8;

@@ -12,6 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
+// Modificado por André do Valle Medeiros em 2026: parâmetro dutyCyclePercent.
 
 package flora.LoRaApp;
 
@@ -28,6 +29,7 @@ simple SimpleLoRaApp like IApp
         int numberOfPacketsToSend = default(1);
         volatile double timeToFirstPacket @unit(s) = default(10s);
         volatile double timeToNextPacket @unit(s) = default(10s);
+        double dutyCyclePercent = default(1); // duty cycle máximo (%), define o intervalo mínimo entre envios
         double initialLoRaTP @unit(dBm) = default(14dBm);
         double initialLoRaCF @unit(Hz) = default(868MHz);
         int initialLoRaSF = default(12);

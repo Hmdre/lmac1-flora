@@ -12,14 +12,50 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
+// Modificado por André do Valle Medeiros em 2026: intervalo mínimo entre envios calculado pelo tempo no ar e pelo
+// duty cycle; fim da espera mínima de 5 s antes do primeiro envio.
 
 #include "SimpleLoRaApp.h"
 #include "inet/mobility/static/StationaryMobility.h"
 #include "../LoRa/LoRaTagInfo_m.h"
 #include "inet/common/packet/Packet.h"
+#include <cmath>
 
 
 namespace flora {
+
+namespace {
+
+// usa o intervalo mínimo, com até 1% de variação aleatória, se a amostra for menor
+simtime_t applyMinDelayWithJitter(const cComponent *owner, simtime_t baseDelay, simtime_t minDelay)
+{
+    simtime_t jitter = minDelay * 0.01;
+    if (jitter < SimTime(1, SIMTIME_US))
+        jitter = SimTime(1, SIMTIME_US);
+    simtime_t sample = minDelay + owner->uniform(SimTime(0, SIMTIME_S), jitter);
+    return (sample > baseDelay) ? sample : baseDelay;
+}
+
+// Mesmo cálculo de tempo no ar do LoRaTransmitter, inclusive a divisão inteira antes
+// do ceil(), para o intervalo mínimo coincidir com a duração real da transmissão.
+simtime_t computeTimeOnAir(int spreadFactor, double bandwidthHz, int payloadBytes, int codeRedundance)
+{
+    double Tsym = std::pow(2, spreadFactor) / (bandwidthHz / 1000);
+    int nPreamble = 10;
+    simtime_t Tpreamble = (nPreamble + 4.25) * Tsym / 1000;
+
+    int num = 8 * payloadBytes - 4 * spreadFactor + 28 + 16 - 20 * 0;
+    int den = 4 * (spreadFactor - 2 * 0);
+    int payloadSymbNb = 8 + std::ceil(num / den) * (codeRedundance + 4);
+    if (payloadSymbNb < 8)
+        payloadSymbNb = 8;
+    simtime_t Theader = 0.5 * (8 + payloadSymbNb) * Tsym / 1000;
+    simtime_t Tpayload = 0.5 * (8 + payloadSymbNb) * Tsym / 1000;
+
+    return Tpreamble + Theader + Tpayload;
+}
+
+} // namespace
 
 Define_Module(SimpleLoRaApp);
 
@@ -43,13 +79,8 @@ void SimpleLoRaApp::initialize(int stage)
         isOperational = (!nodeStatus) || nodeStatus->getState() == NodeStatus::UP;
         if (!isOperational)
             throw cRuntimeError("This module doesn't support starting in node DOWN state");
-        do {
-            timeToFirstPacket = par("timeToFirstPacket");
-            EV << "Wylosowalem czas :" << timeToFirstPacket << endl;
-            //if(timeToNextPacket < 5) error("Time to next packet must be grater than 3");
-        } while(timeToFirstPacket <= 5);
-
-        //timeToFirstPacket = par("timeToFirstPacket");
+        timeToFirstPacket = par("timeToFirstPacket");
+        EV << "Sampled timeToFirstPacket: " << timeToFirstPacket << endl;
         sendMeasurements = new cMessage("sendMeasurements");
         scheduleAt(simTime()+timeToFirstPacket, sendMeasurements);
 
@@ -118,18 +149,11 @@ void SimpleLoRaApp::handleMessage(cMessage *msg)
             delete msg;
             if(numberOfPacketsToSend == 0 || sentPackets < numberOfPacketsToSend)
             {
-                double time;
-                int loRaSF = getSF();
-                if(loRaSF == 7) time = 7.808;
-                if(loRaSF == 8) time = 13.9776;
-                if(loRaSF == 9) time = 24.6784;
-                if(loRaSF == 10) time = 49.3568;
-                if(loRaSF == 11) time = 85.6064;
-                if(loRaSF == 12) time = 171.2128;
-                do {
-                    timeToNextPacket = par("timeToNextPacket");
-                    //if(timeToNextPacket < 3) error("Time to next packet must be grater than 3");
-                } while(timeToNextPacket <= time);
+                // intervalo mínimo entre envios: tempo no ar dividido pela fração de duty cycle
+                simtime_t timeOnAir = computeTimeOnAir(getSF(), getBW().get(), par("dataSize").intValue(), getCR());
+                double dutyCyclePercent = par("dutyCyclePercent").doubleValue();
+                const simtime_t minNextPacketDelay = timeOnAir / (dutyCyclePercent / 100.0) + SimTime(1, SIMTIME_US);
+                timeToNextPacket = applyMinDelayWithJitter(this, par("timeToNextPacket"), minNextPacketDelay);
                 sendMeasurements = new cMessage("sendMeasurements");
                 scheduleAt(simTime() + timeToNextPacket, sendMeasurements);
             }
