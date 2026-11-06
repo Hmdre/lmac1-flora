@@ -12,6 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
+// Modificado por André do Valle Medeiros em 2026: mac.typename com default(), para o .ini poder escolher o MAC.
 
 package flora.LoRa;
 
@@ -27,7 +28,7 @@ module LoRaNic extends WirelessInterface
         radio.transmitter.typename = "LoRaTransmitter";
         radio.transmitter.headerLength = 0B;
         radio.receiver.typename = "LoRaReceiver";
-        mac.typename = "LoRaMac";
+        mac.typename = default("LoRaMac");
         queue.typename = default("DropTailQueue");
         queue.packetCapacity = default(-1);
 }

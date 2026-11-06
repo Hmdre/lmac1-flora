@@ -1,6 +1,7 @@
 #!/bin/bash
+# Modificado por André do Valle Medeiros em 2026: caminho padrão do INET passa a ser inet4.4.
 if [ "$INET_ROOT" = "" ]; then
-  INET_ROOT=$(dirname $0)/../../inet4.3
+  INET_ROOT=$(dirname $0)/../../inet4.4
 fi
 
 PATH=$INET_ROOT/src:$PATH

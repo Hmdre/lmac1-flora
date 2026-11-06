@@ -12,6 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
+// Modificado por André do Valle Medeiros em 2026: remove a palavra-chave register, inválida em C++17.
 
 #include "LoRaModulation.h"
 
@@ -39,7 +40,7 @@ double LoRaModulation::calculateBER(double snir, Hz bandwidth, bps bitrate) cons
     // calculations, formula 7). Here you can see that the factor of 20.0 is correct ;).
     const double dSNRFct = 20.0 *snir *bandwidth.get() / bitrate.get(); // TODO is this correct?
     double dSumK = 0;
-    register int k = 2;
+    int k = 2;
 
     /* following loop was optimized by using n_choose_k symmetries
        for (k=2; k <= 16; ++k) {
